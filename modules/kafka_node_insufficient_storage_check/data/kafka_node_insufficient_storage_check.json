@@ -1,0 +1,134 @@
+{
+  "name": "kafka_node_insufficient_storage_check",
+  "description": "This incident type occurs when a Kafka node has insufficient storage space available. Kafka nodes are responsible for storing and processing streams of data in a Kafka cluster. When a node runs out of storage space, it may cause data loss or processing errors. This can impact the overall performance and reliability of the Kafka cluster. To prevent this, it is important to regularly monitor and manage the storage capacity of Kafka nodes.",
+  "params": [
+    {
+      "name": "TOPIC_NAME",
+      "value": ""
+    },
+    {
+      "name": "KAFKA_LOG_DIRECTORY",
+      "value": ""
+    },
+    {
+      "name": "DIRECTORY",
+      "value": ""
+    },
+    {
+      "name": "DISK_SIZE",
+      "value": ""
+    },
+    {
+      "name": "BOOTSTRAP_SERVER",
+      "value": ""
+    },
+    {
+      "name": "MOUNT_POINT",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Kafka node insufficient storage check\nThis incident type occurs when a Kafka node has insufficient storage space available. Kafka nodes are responsible for storing and processing streams of data in a Kafka cluster. When a node runs out of storage space, it may cause data loss or processing errors. This can impact the overall performance and reliability of the Kafka cluster. To prevent this, it is important to regularly monitor and manage the storage capacity of Kafka nodes."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check disk usage on the Kafka node"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h ${MOUNT_POINT}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the available space on the Kafka node"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `du -sh ${DIRECTORY}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the size of Kafka logs on the node"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `du -sh ${KAFKA_LOG_DIRECTORY}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current partition status of Kafka topics"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --describe --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC_NAME}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Kafka broker and its partitions"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-broker-api-versions.sh --bootstrap-server ${BOOTSTRAP_SERVER}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the replication status of Kafka topics"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --describe --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC_NAME} --under-replicated-partitions`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the storage capacity of the Kafka node by adding more disk space or upgrading to a larger storage device."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_disk_setup($DISK_SIZE, $MOUNT_POINT)"
+    }
+  ]
+}
