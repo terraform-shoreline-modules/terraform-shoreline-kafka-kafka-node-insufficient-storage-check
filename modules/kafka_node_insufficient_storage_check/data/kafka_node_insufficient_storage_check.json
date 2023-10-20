@@ -1,29 +1,33 @@
 {
   "name": "kafka_node_insufficient_storage_check",
-  "description": "This incident type occurs when a Kafka node has insufficient storage space available. Kafka nodes are responsible for storing and processing streams of data in a Kafka cluster. When a node runs out of storage space, it may cause data loss or processing errors. This can impact the overall performance and reliability of the Kafka cluster. To prevent this, it is important to regularly monitor and manage the storage capacity of Kafka nodes.",
+  "description": "This incident type refers to when a Kafka node runs out of storage space to store data. This can cause issues with data processing and storage, potentially leading to data loss and system downtime.",
   "params": [
     {
-      "name": "TOPIC_NAME",
+      "name": "PATH_TO_KAFKA_CONFIG_FILE",
       "value": ""
     },
     {
-      "name": "KAFKA_LOG_DIRECTORY",
+      "name": "PATH_TO_KAFKA_DATA_DIRECTORY",
       "value": ""
     },
     {
-      "name": "DIRECTORY",
+      "name": "KAFKA_CONFIG_FILE",
       "value": ""
     },
     {
-      "name": "DISK_SIZE",
+      "name": "KAFKA_LOG_FILE",
       "value": ""
     },
     {
-      "name": "BOOTSTRAP_SERVER",
+      "name": "NUMBER_OF_DAYS",
       "value": ""
     },
     {
       "name": "MOUNT_POINT",
+      "value": ""
+    },
+    {
+      "name": "KAFKA_LOGS_DIRECTORY",
       "value": ""
     },
     {
@@ -44,13 +48,13 @@
       "name": "cell_1",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Kafka node insufficient storage check\nThis incident type occurs when a Kafka node has insufficient storage space available. Kafka nodes are responsible for storing and processing streams of data in a Kafka cluster. When a node runs out of storage space, it may cause data loss or processing errors. This can impact the overall performance and reliability of the Kafka cluster. To prevent this, it is important to regularly monitor and manage the storage capacity of Kafka nodes."
+      "content": "## Kafka node insufficient storage check\nThis incident type refers to when a Kafka node runs out of storage space to store data. This can cause issues with data processing and storage, potentially leading to data loss and system downtime."
     },
     {
       "name": "cell_2",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Check disk usage on the Kafka node"
+      "content": "## Check available storage space on the Kafka node"
     },
     {
       "name": "cell_3",
@@ -62,73 +66,73 @@
       "name": "cell_4",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Check the available space on the Kafka node"
+      "content": "## Check the size of the Kafka logs directory"
     },
     {
       "name": "cell_5",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `du -sh ${DIRECTORY}`"
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `du -sh ${KAFKA_LOGS_DIRECTORY}`"
     },
     {
       "name": "cell_6",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Check the size of Kafka logs on the node"
+      "content": "## Check the amount of free memory on the Kafka node"
     },
     {
       "name": "cell_7",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `du -sh ${KAFKA_LOG_DIRECTORY}`"
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `free -h`"
     },
     {
       "name": "cell_8",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Check the current partition status of Kafka topics"
+      "content": "## Check the Kafka server logs for any errors related to storage space"
     },
     {
       "name": "cell_9",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --describe --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC_NAME}`"
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep \"insufficient storage\" ${KAFKA_LOG_FILE}`"
     },
     {
       "name": "cell_10",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Check the status of the Kafka broker and its partitions"
+      "content": "## Check the Kafka server configuration for the maximum storage size"
     },
     {
       "name": "cell_11",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-broker-api-versions.sh --bootstrap-server ${BOOTSTRAP_SERVER}`"
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep \"max.message.bytes\" ${KAFKA_CONFIG_FILE}`"
     },
     {
       "name": "cell_12",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Check the replication status of Kafka topics"
+      "content": "## Reduce the amount of data being stored on the Kafka node by deleting old data or implementing data retention policies."
     },
     {
       "name": "cell_13",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --describe --bootstrap-server ${BOOTSTRAP_SERVER} --topic ${TOPIC_NAME} --under-replicated-partitions`"
+      "content": "host | host_name=$HOST_NAME | invoke_delete_old_kafka_topics($PATH_TO_KAFKA_DATA_DIRECTORY, $NUMBER_OF_DAYS)"
     },
     {
       "name": "cell_14",
       "type": "MARKDOWN",
       "enabled": true,
-      "content": "## Increase the storage capacity of the Kafka node by adding more disk space or upgrading to a larger storage device."
+      "content": "## Optimize the Kafka node's configuration to use storage more efficiently, such as compressing data or using a more effective storage engine."
     },
     {
       "name": "cell_15",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "host | host_name=$HOST_NAME | invoke_disk_setup($DISK_SIZE, $MOUNT_POINT)"
+      "content": "host | host_name=$HOST_NAME | invoke_kafka_config_compression($PATH_TO_KAFKA_CONFIG_FILE)"
     }
   ]
 }
